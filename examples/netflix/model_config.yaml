@@ -1,0 +1,20 @@
+input_features:
+    - name: User
+      type: category
+
+    - name: Movie
+      type: category
+
+    - name: Year
+      type: category
+
+    - name: Name
+      type: text
+
+output_features:
+    - name: Rating
+      type: numerical
+
+training:
+    epochs: 1
+    batch_size: 512
