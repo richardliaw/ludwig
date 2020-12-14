@@ -19,11 +19,12 @@ import logging
 from collections import defaultdict
 
 import ray
+from ray.util.dask import ray_dask_get
 from horovod.ray import RayExecutor
 
 from ludwig.backend.base import Backend, RemoteTrainingMixin
 from ludwig.constants import NAME
-from ludwig.data.processor.dask import DaskProcessor
+from ludwig.data.processor.dask import DaskProcessor, set_scheduler
 from ludwig.models.predictor import BasePredictor, RemotePredictor
 from ludwig.models.trainer import BaseTrainer, RemoteTrainer
 from ludwig.utils.tf_utils import initialize_tensorflow
@@ -138,6 +139,7 @@ class RayBackend(RemoteTrainingMixin, Backend):
     def __init__(self, horovod_kwargs=None):
         super().__init__()
         self._processor = DaskProcessor()
+        set_scheduler(ray_dask_get)
         self._horovod_kwargs = horovod_kwargs or {}
         self._tensorflow_kwargs = {}
 

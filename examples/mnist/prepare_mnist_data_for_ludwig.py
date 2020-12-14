@@ -10,4 +10,7 @@ for name in ['training', 'testing']:
             path = os.path.join('data','mnist_png',name,str(i))
             for file in os.listdir(path):
                 if file.endswith(".png"):
-                    output_file.write('{},{}\n'.format(os.path.join(os.path.join('mnist_png',name,str(i)), file), str(i)))
+                    file_path = os.path.join(path, file)
+                    file_path = os.path.abspath(file_path)
+                    # for i in range(5):
+                    output_file.write('{},{}\n'.format(file_path, str(i)))

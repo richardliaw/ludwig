@@ -26,7 +26,9 @@ from ludwig.data.dataset.parquet import ParquetDataset
 from ludwig.data.processor.base import DataProcessor
 from ludwig.utils.data_utils import DATA_PROCESSED_CACHE_DIR, DATASET_SPLIT_URL
 from ludwig.utils.misc_utils import get_features
+import logging
 
+logger = logging.getLogger(__name__)
 
 def set_scheduler(scheduler):
     dask.config.set(scheduler=scheduler)
@@ -37,24 +39,31 @@ class DaskProcessor(DataProcessor):
         self._parallelism = parallelism or multiprocessing.cpu_count()
 
     def parallelize(self, data):
+        logger.info("[dask] Parallelize via repartition...")
         return data.repartition(self.parallelism)
 
     def persist(self, data):
+        logger.info("[dask] Persist...")
         return data.persist()
 
     def compute(self, data):
+        logger.info("[dask] Computing dag...")
         return data.compute()
 
     def from_pandas(self, df):
+        logger.info("[dask] from pandas...")
         return dd.from_pandas(df, npartitions=self.parallelism)
 
     def map_objects(self, series, map_fn):
+        logger.info("[dask] map objects...")
         return series.map(map_fn, meta=('data', 'object'))
 
     def reduce_objects(self, series, reduce_fn):
+        logger.info(f"[dask] reducing with {reduce_fn}...")
         return series.reduction(reduce_fn, aggregate=reduce_fn, meta=('data', 'object')).compute()[0]
 
     def create_dataset(self, dataset, tag, config, training_set_metadata):
+        logger.info(f"[dask] creating dataset tag={tag}...")
         cache_dir = training_set_metadata.get(DATA_PROCESSED_CACHE_DIR)
         tag = tag.lower()
         dataset_parquet_fp = os.path.join(cache_dir, f'{tag}.parquet')
@@ -67,6 +76,8 @@ class DaskProcessor(DataProcessor):
                 dataset[name] = self.map_objects(dataset[name], lambda x: x.reshape(-1))
 
         os.makedirs(dataset_parquet_fp, exist_ok=True)
+
+        logger.info("[dask] to parquet...!")
         dataset.to_parquet(dataset_parquet_fp,
                            engine='pyarrow',
                            write_index=False,
